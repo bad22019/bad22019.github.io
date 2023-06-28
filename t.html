@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Trees Live Map</title>
+    <style>
+        html, body {
+            height: 100%;
+        }
+        
+        .full-height {
+            height: 100%;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+        import { getStorage, ref, getDownloadURL, listAll, getMetadata, getBlob } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
+      
+        const firebaseConfig = {
+          apiKey: "AIzaSyBlIXjNd6uRvwRQVlE1fNApgFR8-6Kw648",
+          authDomain: "trlvmp.firebaseapp.com",
+          projectId: "trlvmp",
+          storageBucket: "trlvmp.appspot.com",
+          messagingSenderId: "852942268995",
+          appId: "1:852942268995:web:23bb4c0549f5f5e2f382f6",
+          measurementId: "G-0ZNR8MN4GJ"
+        };
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const storage = getStorage(app, "gs://trlvmp.appspot.com");
+
+        
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const uid = user.uid;
+            } else {
+                // ...
+            }
+        });
+
+        setPersistence(auth, browserSessionPersistence)
+            .then(() => {
+                return signInAnonymously(auth)
+                            .then(() => {
+                                // ...
+                            })
+                            .catch((error) => {
+                                const errorCode = error.code;
+                                const errorMessage = error.message;
+                                // ...
+                        });
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+        });
+
+        
+        let image_paths = [];
+        let mapp = 'map1'
+        var listRef = ref(storage, mapp);
+            listAll(listRef)
+            .then((res) => {
+
+                // get all paths
+                res.items.forEach((itemRef) => {
+                    image_paths.push(itemRef._location['path_']);
+                });
+                
+                // for every path, create an image of 0px and append it to an element
+                function preloadImages(item, index) {
+                    var image_iter = document.createElement("img");
+                    image_iter.id = 'i' + String(index)
+                    image_iter.style.width = "0px";
+                    document.getElementById("preloadedImages").appendChild(image_iter);
+                    getDownloadURL(ref(storage, item))
+                    .then((url) => {
+                        image_iter.setAttribute('src', url); 
+                    }).catch((error) => {});
+                };
+                image_paths.forEach(preloadImages);
+
+            }).catch((error) => {});
+        
+    </script>
+    <script>
+        function getDMS2DD(days, minutes, seconds, direction) {
+            direction.toUpperCase();
+            var dd = days + minutes/60 + seconds/(60*60);
+            if (direction == "S" || direction == "W") {
+                dd = dd*-1;
+            }
+            return dd;
+        }
+
+        function getExif() {
+
+            var mapOptions = {
+                        center:[40.528184109219886, 23.228382042976953],
+                        zoom:8
+                    };
+
+            var map = new L.Map('map' , mapOptions);
+            var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+            map.addLayer(layer);
+
+            // read all preloaded images, get gps coordinates, place them on the map, and delete div that held preloaded images
+            const myElement = document.getElementById("preloadedImages");
+            for (const child of myElement.children) {
+                EXIF.getData(child, function() {
+                var allMetaData = EXIF.getAllTags(this);
+                var lat = getDMS2DD(allMetaData['GPSLatitude'][0], allMetaData['GPSLatitude'][1], allMetaData['GPSLatitude'][2], allMetaData['GPSLatitudeRef']);
+                var long = getDMS2DD(allMetaData['GPSLongitude'][0], allMetaData['GPSLongitude'][1], allMetaData['GPSLongitude'][2], allMetaData['GPSLongitudeRef']);
+                var marker = new L.Marker([lat, long]);
+                marker.bindPopup('<img id="myimg" width="200px" src="'+child.src+'">');
+                marker.addTo(map);
+            })};
+            myElement.remove();
+        };
+        window.onload = function(){
+        setTimeout(getExif, 5000)
+        };
+
+    </script>
+    <link rel = "stylesheet" href = "http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+
+  </head>
+  <body>
+    <script src = "http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <div id="map" class="full-height"></div>
+    <div id="preloadedImages"></div>
+  </body>
+</html>
