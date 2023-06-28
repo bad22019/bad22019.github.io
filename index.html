@@ -109,7 +109,7 @@
                     };
 
             var map = new L.Map('map' , mapOptions);
-            var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+            var layer = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
             map.addLayer(layer);
 
             // read all preloaded images, get gps coordinates, place them on the map, and delete div that held preloaded images
@@ -130,11 +130,11 @@
         };
 
     </script>
-    <link rel = "stylesheet" href = "http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+    <link rel = "stylesheet" href = "https://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
 
   </head>
   <body>
-    <script src = "http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src = "https://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
     <div id="map" class="full-height"></div>
     <div id="preloadedImages"></div>
   </body>
